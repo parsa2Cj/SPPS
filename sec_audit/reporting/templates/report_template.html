@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>داشبورد جامع امنیت وب‌سایت - SecAudit 2.0 Enterprise</title>
+    <!-- Chart.js CDN with graceful offline fallback -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #151e2e;
+            --bg-subcard: #1e293b;
+            --border-color: #2e3d55;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --critical: #ef4444;
+            --high: #f97316;
+            --medium: #eab308;
+            --low: #3b82f6;
+            --info: #06b6d4;
+            --success: #10b981;
+            --accent: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Tahoma, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem 1.5rem;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* Top Header */
+        .header-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-title h1 {
+            font-size: 1.9rem;
+            color: var(--accent);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .header-meta {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .header-meta strong {
+            color: #cbd5e1;
+        }
+
+        .score-box {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            background: rgba(11, 15, 25, 0.75);
+            padding: 1.25rem 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .grade-badge {
+            font-size: 2.6rem;
+            font-weight: 900;
+            width: 75px;
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .grade-A { background: var(--success); }
+        .grade-B { background: #3b82f6; }
+        .grade-C { background: var(--medium); color: #000; }
+        .grade-D { background: var(--high); }
+        .grade-F { background: var(--critical); }
+
+        .score-details h3 {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .score-details p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Analytics Section */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card h3 {
+            font-size: 1.05rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Tech Stack & License Badges */
+        .info-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .info-card h3 {
+            font-size: 1.1rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .tech-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--bg-subcard);
+            border: 1px solid var(--border-color);
+            padding: 0.35rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin: 0.25rem;
+        }
+
+        .tech-pill span.cat {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        /* Stats Bar */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.25rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .stat-critical::before { background: var(--critical); }
+        .stat-high::before { background: var(--high); }
+        .stat-medium::before { background: var(--medium); }
+        .stat-low::before { background: var(--low); }
+        .stat-info::before { background: var(--info); }
+
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-top: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Controls */
+        .controls-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.2rem 1.6rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.45rem 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--accent);
+            color: #0b0f19;
+            font-weight: bold;
+            border-color: var(--accent);
+        }
+
+        .search-box input {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.55rem 1.1rem;
+            border-radius: 10px;
+            font-size: 0.92rem;
+            width: 280px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Finding Card */
+        .finding-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            padding: 1.75rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .finding-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.5);
+        }
+
+        .finding-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .finding-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .badge-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .badge-CRITICAL { background: var(--critical); color: #fff; }
+        .badge-HIGH { background: var(--high); color: #fff; }
+        .badge-MEDIUM { background: var(--medium); color: #000; }
+        .badge-LOW { background: var(--low); color: #fff; }
+        .badge-INFO { background: var(--info); color: #fff; }
+
+        .cvss-badge {
+            background: #334155;
+            color: #e2e8f0;
+            padding: 0.3rem 0.6rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .finding-category {
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .finding-desc {
+            color: #cbd5e1;
+            font-size: 0.98rem;
+            margin-bottom: 1rem;
+        }
+
+        .code-block {
+            background: #070a11;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 0.85rem 1.1rem;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.88rem;
+            color: #e2e8f0;
+            overflow-x: auto;
+            direction: ltr;
+            text-align: left;
+            margin-bottom: 1.2rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .remediation-box {
+            background: rgba(16, 185, 129, 0.07);
+            border-right: 4px solid var(--success);
+            border-radius: 6px;
+            padding: 0.85rem 1.2rem;
+            margin-top: 0.8rem;
+        }
+
+        .remediation-title {
+            color: var(--success);
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .remediation-text {
+            color: #a7f3d0;
+            font-size: 0.95rem;
+        }
+
+        /* Auto-Fix Snippets Tabs */
+        .snippet-box {
+            background: #090e1a;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin-top: 0.9rem;
+            overflow: hidden;
+        }
+
+        .snippet-tabs {
+            display: flex;
+            background: #101726;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .snippet-tab {
+            padding: 0.5rem 1rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-right: 1px solid var(--border-color);
+            background: transparent;
+            border-top: none;
+            border-bottom: none;
+            border-left: none;
+        }
+
+        .snippet-tab.active {
+            background: var(--bg-subcard);
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .snippet-content {
+            padding: 0.85rem 1.1rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            direction: ltr;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header-card">
+            <div class="header-title">
+                <h1>🔒 داشبورد جامع ارزیابی امنیت (SecAudit 2.0 Enterprise)</h1>
+                <div class="header-meta">
+                    {% if target_url %}
+                        <div><strong>آدرس وب‌سایت هدف:</strong> <span style="direction:ltr; display:inline-block;">{{ target_url }}</span></div>
+                    {% endif %}
+                    {% if target_dir %}
+                        <div><strong>مسیر پروژه منبع:</strong> <span style="direction:ltr; display:inline-block;">{{ target_dir }}</span></div>
+                    {% endif %}
+                    <div><strong>تاریخ تحلیل:</strong> {{ scan_date }} | <strong>مدت زمان اسکن:</strong> {{ duration_seconds }} ثانیه</div>
+                </div>
+            </div>
+            <div class="score-box">
+                <div class="grade-badge grade-{{ grade[0] }}">{{ grade }}</div>
+                <div class="score-details">
+                    <h3>{{ security_score }} / ۱۰۰</h3>
+                    <p>نمره کلی امنیت سیستم</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Bar -->
+        <section class="stats-grid">
+            <div class="stat-card stat-critical">
+                <div class="stat-label">بحرانی (Critical)</div>
+                <div class="stat-number" style="color: var(--critical)">{{ stats.CRITICAL | default(0) }}</div>
+            </div>
+            <div class="stat-card stat-high">
+                <div class="stat-label">بالا (High)</div>
+                <div class="stat-number" style="color: var(--high)">{{ stats.HIGH | default(0) }}</div>
+            </div>
+            <div class="stat-card stat-medium">
+                <div class="stat-label">متوسط (Medium)</div>
+                <div class="stat-number" style="color: var(--medium)">{{ stats.MEDIUM | default(0) }}</div>
+            </div>
+            <div class="stat-card stat-low">
+                <div class="stat-label">پایین (Low)</div>
+                <div class="stat-number" style="color: var(--low)">{{ stats.LOW | default(0) }}</div>
+            </div>
+            <div class="stat-card stat-info">
+                <div class="stat-label">اطلاعاتی (Info)</div>
+                <div class="stat-number" style="color: var(--info)">{{ stats.INFO | default(0) }}</div>
+            </div>
+        </section>
+
+        <!-- Analytics Charts -->
+        <section class="analytics-grid">
+            <div class="chart-card">
+                <h3>📊 توزیع آسیب‌پذیری‌ها بر اساس شدت (Severity)</h3>
+                <div class="chart-container">
+                    <canvas id="severityChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>📂 تفکیک یافته‌ها بر اساس دسته‌بندی امنیتی</h3>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech Stack & Licenses -->
+        {% if detected_tech or license_summary %}
+            <div class="info-row">
+                {% if detected_tech %}
+                    <div class="info-card">
+                        <h3>🛠️ تکنولوژی‌ها و فریم‌ورک‌های شناسایی شده</h3>
+                        <div>
+                            {% for tech in detected_tech %}
+                                <span class="tech-pill">
+                                    <strong>{{ tech.name }}</strong>
+                                    <span class="cat">({{ tech.category }})</span>
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if license_summary %}
+                    <div class="info-card">
+                        <h3>📜 ممیزی لایسنس‌های پکیج‌ها (License Compliance)</h3>
+                        <div>
+                            {% for lic_name, lic_count in license_summary.items() %}
+                                <span class="tech-pill">
+                                    <strong>{{ lic_name }}:</strong> {{ lic_count }} پکیج
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Controls & Filters -->
+        <div class="controls-card">
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterSeverity('ALL')">همه ({{ findings|length }})</button>
+                <button class="filter-btn" onclick="filterSeverity('CRITICAL')">بحرانی</button>
+                <button class="filter-btn" onclick="filterSeverity('HIGH')">بالا</button>
+                <button class="filter-btn" onclick="filterSeverity('MEDIUM')">متوسط</button>
+                <button class="filter-btn" onclick="filterSeverity('LOW')">پایین</button>
+                <button class="filter-btn" onclick="filterSeverity('INFO')">اطلاعاتی</button>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="جستجو در یافته‌ها یا CWE..." oninput="searchFindings()">
+            </div>
+        </div>
+
+        <!-- Findings List -->
+        <main id="findingsList">
+            {% if findings %}
+                {% for finding in findings %}
+                    <article class="finding-card" data-severity="{{ finding.severity }}">
+                        <div class="finding-header">
+                            <div>
+                                <span class="finding-category">{{ finding.category }}</span>
+                                <h2 class="finding-title">{{ finding.title }}</h2>
+                            </div>
+                            <div class="badge-group">
+                                {% if finding.cvss_score %}
+                                    <span class="cvss-badge">CVSS {{ finding.cvss_score }}</span>
+                                {% endif %}
+                                <span class="badge badge-{{ finding.severity }}">{{ finding.severity }}</span>
+                            </div>
+                        </div>
+
+                        <p class="finding-desc">{{ finding.description }}</p>
+
+                        {% if finding.location %}
+                            <div style="font-size: 0.88rem; color: #94a3b8; margin-bottom: 0.6rem;">
+                                <strong>موقعیت:</strong> <span style="direction: ltr; display: inline-block; color: #cbd5e1;">{{ finding.location }}</span>
+                                {% if finding.cwe_id %}
+                                    | <strong>شناسه آسیب‌پذیری:</strong> <span style="direction: ltr; display: inline-block; color: var(--accent);">{{ finding.cwe_id }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        {% if finding.evidence %}
+                            <div class="code-block">{{ finding.evidence }}</div>
+                        {% endif %}
+
+                        <div class="remediation-box">
+                            <div class="remediation-title">💡 راهکار رفع مشکل (Remediation):</div>
+                            <div class="remediation-text">{{ finding.remediation }}</div>
+                        </div>
+
+                        {% if finding.fix_snippet %}
+                            <div class="snippet-box">
+                                <div class="snippet-tabs">
+                                    {% for server_type, snippet_code in finding.fix_snippet.items() %}
+                                        <button class="snippet-tab {% if loop.first %}active{% endif %}" onclick="switchSnippet(this, '{{ loop.index0 }}_{{ loop.parent.loop.index0 }}')">
+                                            {{ server_type|upper }}
+                                        </button>
+                                    {% endfor %}
+                                </div>
+                                {% for server_type, snippet_code in finding.fix_snippet.items() %}
+                                    <div class="snippet-content" id="snip_{{ loop.index0 }}_{{ loop.parent.loop.index0 }}" style="display: {% if loop.first %}block{% else %}none{% endif %};">
+{{ snippet_code }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 4rem 2rem; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-color);">
+                    <h3 style="color: var(--success); font-size: 1.6rem; margin-bottom: 0.5rem;">✅ هیچ آسیب‌پذیری امنیتی شناسایی نشد!</h3>
+                    <p style="color: var(--text-secondary);">پیکربندی امنیتی پروژه و وب‌سایت کاملاً منطبق با استانداردها و بدون ضعف است.</p>
+                </div>
+            {% endif %}
+        </main>
+
+        <footer>
+            <p>تولید شده توسط پلتفرم هوشمند SecAudit 2.0 Enterprise Security Auditor</p>
+        </footer>
+    </div>
+
+    <script>
+        let currentFilter = 'ALL';
+
+        // Render Charts
+        document.addEventListener('DOMContentLoaded', () => {
+            const stats = {{ stats | tojson }};
+            const findings = {{ findings | tojson }};
+
+            // 1. Severity Doughnut Chart
+            const sevCtx = document.getElementById('severityChart');
+            if (sevCtx && typeof Chart !== 'undefined') {
+                new Chart(sevCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['بحرانی (Critical)', 'بالا (High)', 'متوسط (Medium)', 'پایین (Low)', 'اطلاعاتی (Info)'],
+                        datasets: [{
+                            data: [
+                                stats.CRITICAL || 0,
+                                stats.HIGH || 0,
+                                stats.MEDIUM || 0,
+                                stats.LOW || 0,
+                                stats.INFO || 0
+                            ],
+                            backgroundColor: ['#ef4444', '#f97316', '#eab308', '#3b82f6', '#06b6d4'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right', labels: { color: '#cbd5e1', font: { family: 'system-ui' } } }
+                        }
+                    }
+                });
+            }
+
+            // 2. Category Bar Chart
+            const catCtx = document.getElementById('categoryChart');
+            if (catCtx && typeof Chart !== 'undefined') {
+                const catCounts = {};
+                findings.forEach(f => {
+                    catCounts[f.category] = (catCounts[f.category] || 0) + 1;
+                });
+
+                new Chart(catCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(catCounts),
+                        datasets: [{
+                            label: 'تعداد یافته‌ها',
+                            data: Object.values(catCounts),
+                            backgroundColor: '#38bdf8',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+                            y: { ticks: { color: '#cbd5e1' }, grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        });
+
+        function filterSeverity(severity) {
+            currentFilter = severity;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            applyFilters();
+        }
+
+        function searchFindings() {
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.finding-card');
+
+            cards.forEach(card => {
+                const cardSev = card.getAttribute('data-severity');
+                const cardText = card.innerText.toLowerCase();
+
+                const matchesSev = (currentFilter === 'ALL' || cardSev === currentFilter);
+                const matchesQuery = cardText.includes(query);
+
+                if (matchesSev && matchesQuery) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function switchSnippet(btn, id) {
+            const parent = btn.closest('.snippet-box');
+            parent.querySelectorAll('.snippet-tab').forEach(t => t.classList.remove('active'));
+            parent.querySelectorAll('.snippet-content').forEach(c => c.style.display = 'none');
+            btn.classList.add('active');
+            const target = document.getElementById('snip_' + id);
+            if (target) target.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
